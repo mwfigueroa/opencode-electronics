@@ -33,8 +33,16 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 ├── journal/             ← dated log entries: what was done, verified, and learned
 ├── docs/                ← reproducible setup guides
 ├── config/              ← sanitized opencode config examples
+├── skills/              ← custom OpenCode skills (kicad-review, spice-sim)
 └── backlog/             ← MCP servers and ideas being watched / evaluated
 ```
+
+## Custom skills
+
+Drop-in agent skills (copy into `~/.config/opencode/skills/`):
+
+- [skills/kicad-review](skills/kicad-review/SKILL.md) — full KiCad project audit: ERC/DRC via `kicad-cli`, schematic/PCB checklist, report with prioritized action items.
+- [skills/spice-sim](skills/spice-sim/SKILL.md) — SPICE simulation workflow (ngspice/LTspice/QSPICE): transient, AC, op-point, measurements.
 
 ## Start reading
 
@@ -43,6 +51,7 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 - [journal/2026-08-02-hardware-in-the-loop.md](journal/2026-08-02-hardware-in-the-loop.md) — same day: GDB + serial servers, 6 MCP servers connected
 - [journal/2026-08-02-circuit-lab-core.md](journal/2026-08-02-circuit-lab-core.md) — same day: KiCad 10 + ngspice + analysis stack, 7/7 servers
 - [journal/2026-08-02-first-board-review.md](journal/2026-08-02-first-board-review.md) — same day: first real board review (ASAC FC rev A)
+- [journal/2026-08-02-programmatic-kicad-fixes.md](journal/2026-08-02-programmatic-kicad-fixes.md) — same day: fixing review findings headlessly, with two honest mistakes
 - [docs/](docs/) — setup guides if you want to replicate this
 
 ## Notes
