@@ -42,6 +42,7 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 - [journal/2026-08-02-initial-setup.md](journal/2026-08-02-initial-setup.md) — day one: from broken CLI to 4 MCP servers connected
 - [journal/2026-08-02-hardware-in-the-loop.md](journal/2026-08-02-hardware-in-the-loop.md) — same day: GDB + serial servers, 6 MCP servers connected
 - [journal/2026-08-02-circuit-lab-core.md](journal/2026-08-02-circuit-lab-core.md) — same day: KiCad 10 + ngspice + analysis stack, 7/7 servers
+- [journal/2026-08-02-first-board-review.md](journal/2026-08-02-first-board-review.md) — same day: first real board review (ASAC FC rev A)
 - [docs/](docs/) — setup guides if you want to replicate this
 
 ## Notes
