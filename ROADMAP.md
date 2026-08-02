@@ -47,14 +47,15 @@ Status legend: ✅ done · 🟡 partial · ⬜ pending
 - [x] `jlcpcb-mcp` connected (JLCPCB/LCSC catalog, Basic vs Extended parts)
 - [ ] Optional: Nexar/Octopart API key for cross-distributor stock/price search (`NEXAR_API_KEY`)
 
-## Phase 5 — Hardware-in-the-loop ⬜
+## Phase 5 — Hardware-in-the-loop 🟡
 
 **Goal:** close the loop: flash, debug, and read logs from real hardware.
 
-- [ ] Install Rust toolchain (`rustup`)
-- [ ] `cargo install mcp-server-gdb --locked` → GDB/OpenOCD debugging via MCP
-- [ ] `cargo install serial-mcp-server --locked` → serial monitor as an MCP tool
-- [ ] Test on a real ESP32 target (Jig-Station firmware is the candidate)
+- [x] Install Rust toolchain (`rustup`, stable 1.97.1)
+- [x] `cargo install mcp-server-gdb --locked` → GDB/OpenOCD debugging via MCP (v0.2.3, connected)
+- [x] `cargo install serial-mcp-server --locked` → serial monitor as an MCP tool (v0.1.0, connected; needs `pkg-config libudev-dev` on the system)
+- [x] Symlink both binaries into `~/.local/bin` so the plugin detects them regardless of how OpenCode is launched
+- [ ] Test on a real ESP32 target (Jig-Station firmware is the candidate) — needs `usbipd` attach for the serial port and ESP-IDF's `xtensa-esp32-elf-gdb` in WSL
 
 ## Phase 6 — Mechanical CAD ⬜ (research)
 

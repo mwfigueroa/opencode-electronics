@@ -67,9 +67,19 @@ To finish the skipped ones:
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source ~/.cargo/env
+sudo apt install -y pkg-config libudev-dev   # required by serial-mcp-server (libudev-sys)
 cargo install mcp-server-gdb --locked
 cargo install serial-mcp-server --locked
 ```
+
+Two gotchas (details in [journal/2026-08-02-hardware-in-the-loop](../journal/2026-08-02-hardware-in-the-loop.md)):
+
+1. The plugin detects these servers via `which` at startup. Cargo installs to `~/.cargo/bin`, which is missing from non-interactive PATHs (e.g. launching OpenCode through a Windows→WSL wrapper). Fix with symlinks:
+   ```bash
+   ln -sf ~/.cargo/bin/mcp-server-gdb    ~/.local/bin/
+   ln -sf ~/.cargo/bin/serial-mcp-server ~/.local/bin/
+   ```
+2. `mcp-server-gdb` creates its log directory relative to its CWD — it panics if launched from a read-only directory. Fine under OpenCode (project dir), annoying in ad-hoc smoke tests.
 
 ## Verify
 

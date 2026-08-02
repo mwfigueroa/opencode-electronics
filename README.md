@@ -18,7 +18,7 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 | Component sourcing | `jlcpcb-mcp` (JLCPCB/LCSC catalog search) | ✅ Connected |
 | Circuit simulation | `spicebridge` (ngspice via MCP) + custom `spice-sim` skill | ✅ Connected |
 | PCB design | [kicad-mcp](https://github.com/lamaalrajih/kicad-mcp) + `kicad-mcp-server` | 🟡 File analysis works; DRC needs KiCad installed in WSL |
-| Hardware-in-the-loop | `mcp-server-gdb`, `serial-mcp-server` | ⬜ Pending (requires Rust toolchain) |
+| Hardware-in-the-loop | `mcp-server-gdb` + `serial-mcp-server` (Rust) | ✅ Connected; real-target test pending |
 | Mechanical CAD | SolidWorks / Fusion 360 integration | ⬜ Research phase |
 
 ## Repository layout
@@ -36,6 +36,7 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 
 - [ROADMAP.md](ROADMAP.md) — the plan, phase by phase
 - [journal/2026-08-02-initial-setup.md](journal/2026-08-02-initial-setup.md) — day one: from broken CLI to 4 MCP servers connected
+- [journal/2026-08-02-hardware-in-the-loop.md](journal/2026-08-02-hardware-in-the-loop.md) — same day: GDB + serial servers, 6 MCP servers connected
 - [docs/](docs/) — setup guides if you want to replicate this
 
 ## Notes
