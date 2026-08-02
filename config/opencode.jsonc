@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  // Global KiCad MCP server (see docs/03-kicad-mcp.md).
+  // The oh-my-embedded plugin registers its own MCP servers
+  // (esp-mcp, jlcpcb-mcp, spicebridge) separately.
+  "mcp": {
+    "kicad": {
+      "type": "local",
+      "command": [
+        "/home/martinf/opt/kicad-mcp/.venv/bin/python",
+        "/home/martinf/opt/kicad-mcp/main.py"
+      ],
+      "enabled": true,
+      "environment": {
+        "KICAD_SEARCH_PATHS": "/home/martinf/Jig-Station-Research-NS,/mnt/c/Users/marti/Documents,/mnt/c/Users/marti/OneDrive"
+      }
+    }
+  }
+}
