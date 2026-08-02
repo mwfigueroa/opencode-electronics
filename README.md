@@ -34,7 +34,7 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 ├── docs/                ← reproducible setup guides
 ├── config/              ← sanitized opencode config examples
 ├── skills/              ← custom OpenCode skills (kicad-review, spice-sim)
-└── backlog/             ← MCP servers and ideas being watched / evaluated
+└── backlog/             ← MCP watchlist, lab-equipment candidates, ideas being evaluated
 ```
 
 ## Custom skills
