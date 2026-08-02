@@ -35,6 +35,7 @@ Nothing adopted yet. Evaluation axes: API maturity, where the server must run (W
 
 ## Ideas (build our own?)
 
+- **Lab-instruments MCP** — wrap PyVISA/sigrok for bench gear: Rigol DS1054Z scope (SCPI over LAN/USBTMC), programmable PSU, logic analyzers (sigrok). Tools: `measure`, `capture_waveform`, `screenshot`, `set_trigger`. The DS1054Z plumbing is already done (see journal 2026-08-02-rigol-ds1054z).
 - **Datasheet RAG MCP** — local server over manufacturer PDFs (reference manuals, driver ICs, motor drives) with page citations, à la ByteAsk but self-hosted on our own document set.
 - **Design-rules server** — IPC-2221 clearances/creepage, JLCPCB capabilities, and house rules as a queryable MCP tool (coppermind may make this redundant — watch it first).
 - **Fixture/test-jig tooling** — domain MCP servers for production test equipment (jig state machines, DUT databases).
