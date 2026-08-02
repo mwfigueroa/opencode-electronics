@@ -16,10 +16,14 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 | Embedded agents | [oh-my-embedded](https://github.com/captainluzik/oh-my-embedded) plugin: `@embedded`, `@hardware`, `@review-hw` | ✅ Installed |
 | Firmware context | `esp-mcp` (ESP-IDF tooling via MCP) | ✅ Connected |
 | Component sourcing | `jlcpcb-mcp` (JLCPCB/LCSC catalog search) | ✅ Connected |
-| Circuit simulation | `spicebridge` (ngspice via MCP) + custom `spice-sim` skill | ✅ Connected |
-| PCB design | [kicad-mcp](https://github.com/lamaalrajih/kicad-mcp) + `kicad-mcp-server` | 🟡 File analysis works; DRC needs KiCad installed in WSL |
+| Circuit simulation | `spicebridge` (ngspice via MCP) + custom `spice-sim` skill | ✅ Working (ngspice engine verified) |
+| PCB design | [kicad-mcp](https://github.com/lamaalrajih/kicad-mcp) + `kicad-mcp-server` + KiCad 10.0.5 in WSL | ✅ Working (DRC verified on real projects) |
+| Circuit analysis | Python: lcapy (symbolic), scikit-rf (RF), control (Bode/margins) | ✅ Working |
+| Debug & instruments | openocd 0.12 (JTAG/SWD), sigrok-cli 0.7.2 (SCPI/USBTMC/logic analyzers) | ✅ Installed |
 | Hardware-in-the-loop | `mcp-server-gdb` + `serial-mcp-server` (Rust) | ✅ Connected; real-target test pending |
 | Mechanical CAD | SolidWorks / Fusion 360 integration | ⬜ Research phase |
+
+**MCP servers connected: 7/7** — `kicad`, `kicad-mcp`, `esp-mcp`, `jlcpcb-mcp`, `spicebridge`, `mcp-server-gdb`, `serial-mcp-server` (`opencode mcp list`)
 
 ## Repository layout
 
@@ -37,6 +41,7 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 - [ROADMAP.md](ROADMAP.md) — the plan, phase by phase
 - [journal/2026-08-02-initial-setup.md](journal/2026-08-02-initial-setup.md) — day one: from broken CLI to 4 MCP servers connected
 - [journal/2026-08-02-hardware-in-the-loop.md](journal/2026-08-02-hardware-in-the-loop.md) — same day: GDB + serial servers, 6 MCP servers connected
+- [journal/2026-08-02-circuit-lab-core.md](journal/2026-08-02-circuit-lab-core.md) — same day: KiCad 10 + ngspice + analysis stack, 7/7 servers
 - [docs/](docs/) — setup guides if you want to replicate this
 
 ## Notes

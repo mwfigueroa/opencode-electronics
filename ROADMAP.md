@@ -23,13 +23,15 @@ Status legend: ✅ done · 🟡 partial · ⬜ pending
 - [x] Always-on tools: power calculator, impedance/RF matching, resistor divider (E24), ESP32 pin mapper, decoupling advisor
 - [x] `esp-mcp` connected (ESP-IDF docs/tooling via MCP)
 
-## Phase 2 — PCB design 🟡
+## Phase 2 — PCB design ✅
 
 **Goal:** agent can read, analyze, and check KiCad projects.
 
 - [x] [kicad-mcp](https://github.com/lamaalrajih/kicad-mcp) installed (`~/opt/kicad-mcp`) and registered globally in OpenCode
 - [x] Working without a KiCad binary: project listing, netlist extraction, BOM analysis, circuit pattern recognition
-- [ ] KiCad installed **inside WSL** → unlocks DRC via `kicad-cli`, PCB thumbnails, `open_project`
+- [x] KiCad installed **inside WSL** — 10.0.5 via `ppa:kicad/kicad-10.0-releases`, version-matched to the Windows desktop (Ubuntu repos ship 7.x, which can't read v10 files)
+- [x] DRC verified end-to-end on a real KiCad 10 project via `kicad-cli`
+- [x] Plugin's own `kicad-mcp` server awake (needed `pcbnew.py` + its Python `requirements.txt` — silent-hang bug documented in journal)
 - [ ] Evaluate [kicad-mcp-pro](https://github.com/oaslananka/kicad-mcp-pro) (DFM, manufacturing review) and [coppermind](https://github.com/charlesmmorais/coppermind) (IPC-2221 citable rules engine) — see [backlog](backlog/mcp-watchlist.md)
 
 ## Phase 3 — Circuit simulation ✅
@@ -38,6 +40,8 @@ Status legend: ✅ done · 🟡 partial · ⬜ pending
 
 - [x] `spicebridge` MCP server connected (ngspice)
 - [x] Custom `spice-sim` skill (transient, AC, operating point, measurements)
+- [x] ngspice engine installed and verified (`ngspice -b` batch run OK)
+- [x] Python analysis stack: lcapy (symbolic), scikit-rf (RF/S-params), control (Bode, stability margins)
 - [ ] Validate end-to-end: agent-driven simulation of a real project power supply (e.g. buck stage)
 
 ## Phase 4 — Component sourcing ✅
@@ -55,6 +59,7 @@ Status legend: ✅ done · 🟡 partial · ⬜ pending
 - [x] `cargo install mcp-server-gdb --locked` → GDB/OpenOCD debugging via MCP (v0.2.3, connected)
 - [x] `cargo install serial-mcp-server --locked` → serial monitor as an MCP tool (v0.1.0, connected; needs `pkg-config libudev-dev` on the system)
 - [x] Symlink both binaries into `~/.local/bin` so the plugin detects them regardless of how OpenCode is launched
+- [x] OpenOCD 0.12 installed (JTAG/SWD backend) + sigrok-cli 0.7.2 (logic analyzers, SCPI instruments)
 - [ ] Test on a real ESP32 target (Jig-Station firmware is the candidate) — needs `usbipd` attach for the serial port and ESP-IDF's `xtensa-esp32-elf-gdb` in WSL
 
 ## Phase 6 — Mechanical CAD ⬜ (research)
