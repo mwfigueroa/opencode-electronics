@@ -84,6 +84,32 @@ Status legend: ✅ done · 🟡 partial · ⬜ pending
 - STM32CubeMX: generate HAL init code headlessly via `java -jar STM32CubeMX` scripting, or rely on PlatformIO's framework-stm32cube + manual pinmux?
 - NXP: MCUXpresso Config Tools are Windows-only — invoke from Windows side via `cmd.exe /c` or use PlatformIO's framework-zephyr for NXP targets.
 
+## Phase 6b — Test equipment integration 🟡
+
+**Goal:** make lab instruments accessible from the agent via Python SDKs and SCPI over TCP/IP.
+
+**Why:** the toolchain already designs boards and writes firmware. The missing piece is characterization: measuring
+what was built. A full engineering loop needs the scope, signal analyzer, power supply, and electronic load
+to be as scriptable as the compiler.
+
+- [x] `pyvisa` + `pyvisa-py` SCPI stack (no NI-VISA required) — v1.16.2
+- [x] `SoapySDR` 0.8 with modules: HackRF, Red Pitaya, RTL-SDR, Airspy, BladeRF, UHD, LimeSDR
+- [x] **Digilent ADP2230** — pydwf 1.1.19, auto-attach via usbipd, skill done
+- [x] **HackRF One** — libhackrf 2023.01.1, python-hackrf 1.5.0.1, SoapySDR, skill done
+- [x] **Red Pitaya** — pyvisa SCPI over TCP/IP, SoapySDR, skill done
+- [x] **Keysight CXA N9000A** — pyvisa SCPI over LAN (VXI-11), skill done
+- [x] **Prodigit 3310F** — pyvisa serial SCPI, skill done
+- [x] **Keysight E36231A** — pyvisa SCPI over LAN, skill done
+- [ ] Physical test on each instrument (capture, sweep, load)
+- [ ] MCP bridge: `scpi-mcp` — generic SCPI bridge for any VISA instrument
+- [ ] MCP bridge: `pydwf-mcp` — WaveForms SDK bridge for ADP2230
+- [ ] MCP bridge: `hackrf-mcp` — SDR bridge for HackRF One
+
+**Design decisions to make:**
+- One generic `scpi-mcp` server for all SCPI instruments (N9000A, E36231A, Red Pitaya, Prodigit) or separate MCP servers per instrument?
+- SCPI MCP: light wrapper (forward raw commands) or smart (parse responses, high-level measurement functions)?
+- Spectrum analyzer data: return raw trace points as JSON arrays or downsampled? (full sweep = 1001 points × 4 bytes = 4 KB)
+
 ## Phase 6 — Mechanical CAD ⬜ (research)
 
 **Goal:** extend the workflow to mechanical design — SolidWorks and/or Fusion 360.
