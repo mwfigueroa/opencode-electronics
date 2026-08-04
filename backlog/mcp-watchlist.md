@@ -24,6 +24,16 @@ Servers and ideas tracked for this toolchain. Star counts are snapshots (2026-08
 | [es617/serial-mcp-server](https://github.com/es617/serial-mcp-server) | 13 | Serial port as MCP tool (pip-installable variant of the cargo one) |
 | [flaco-source/altium-mcp](https://github.com/flaco-source/altium-mcp) | 8 | Altium Designer bridge via DelphiScript |
 | Context7 | — | Already indexes ESP-IDF, FreeRTOS, Zephyr, PlatformIO, Arduino docs |
+| [platformio/platformio-core](https://github.com/platformio/platformio-core) | — | CLI for 1000+ boards, 40+ platforms (STM32, NXP, ESP32, RISC-V, etc.). Candidate for our own MCP bridge. |
+| [STMicroelectronics/STM32CubeMX](https://github.com/STMicroelectronics/STM32CubeMX) | — | HAL code gen — headless scripting mode via `STM32CubeMX -s script` or CubeMX MCU Finder for pinout. Evaluate as MCP or keep as manual pre-step. |
+| [nxp-mcuxpresso/mcux-sdk](https://github.com/nxp-mcuxpresso/mcux-sdk) | — | NXP MCUXpresso SDK. Open-source core drivers; config tools still Windows-only. Zephyr covers most NXP targets; PlatformIO uses framework-lpcxpresso / framework-mcux. |
+
+## Multi-MCU expansion (Phase 5b — build our own?)
+
+- **PlatformIO MCP bridge** — wrap `platformio` CLI as an MCP server. Tools: `init`, `build`, `upload`, `monitor`, `debug`, `test`, `boards`, `update`. Python, stdio transport like `esp-mcp`. This single bridge unlocks STM32, NXP, RISC-V, native ARM, and everything PlatformIO supports — far more efficient than writing per-vendor MCPs.
+- **`stm32-engineer` skill** — HAL/CubeMX-aware agent: knows STM32F1/F4/H7 peripheral register maps, clock trees, DMA, and CubeMX project patterns. Guides on `stm32cubeprogrammer` for flashing/option bytes vs OpenOCD.
+- **`nxp-engineer` skill** — MCUXpresso/LPC/i.MX RT patterns: pin muxing (IOCON/SWM), FlexComm, SCTimer. Guides on LPC-Link2 / MCU-Link probes.
+- **ARM Cortex-M RAG pipeline** — ByteAsk-Embedded-MCP already covers ARM/MISRA docs generically. Evaluate whether we need to self-host vendor PDFs (STM32 ref manuals, NXP user manuals) for deeper citations.
 
 ## Mechanical CAD (Phase 6 research)
 

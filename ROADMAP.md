@@ -62,6 +62,25 @@ Status legend: ✅ done · 🟡 partial · ⬜ pending
 - [x] OpenOCD 0.12 installed (JTAG/SWD backend) + sigrok-cli 0.7.2 (logic analyzers, SCPI instruments)
 - [ ] Test on a real ESP32 target (Jig-Station firmware is the candidate) — needs `usbipd` attach for the serial port and ESP-IDF's `xtensa-esp32-elf-gdb` in WSL
 
+## Phase 5b — Multi-MCU firmware expansion ⬜
+
+**Goal:** expand beyond ESP32 to STM32, NXP, and other ARM Cortex-M platforms — plus RISC-V and any PlatformIO-supported target.
+
+**Why:** the current stack is ESP32-only. ESP-IDF (`esp-mcp`) covers a single vendor. To be a usable lab for real-world embedded work, the toolchain needs to handle STM32 (STM32Cube/HAL), NXP (MCUXpresso), and generic ARM Cortex-M devices. PlatformIO is the most pragmatic bridge — it supports 1000+ boards across 40+ platforms from one CLI.
+
+- [ ] `arm-none-eabi-gcc` toolchain (`gcc-arm-none-eabi` package)
+- [ ] PlatformIO CLI installed in WSL (`pip install platformio` or install script)
+- [ ] **PlatformIO MCP bridge** — wrap `platformio` CLI as an MCP server: `pio project init`, `pio run`, `pio upload`, `pio device monitor`, `pio debug`, `pio boards`. Model after `esp-mcp` structure (Python, stdio transport, JSON parsing of outputs).
+- [ ] ARM GDB configuration — verify `arm-none-eabi-gdb` works with `mcp-server-gdb` and OpenOCD via ST-Link / CMSIS-DAP (already installed).
+- [ ] Custom skills: `stm32-engineer` (HAL, CubeMX patterns, register maps) and `nxp-engineer` (MCUXpresso, LPC/i.MX RT) — similar to existing `embedded-engineer` but vendor-specific.
+- [ ] Test on at least one physical STM32 target (e.g. STM32F103 Blue Pill) and one NXP target (e.g. LPC1768 or i.MX RT1010) — flash, debug, serial.
+- [ ] Evaluate whether the existing `embedded-review` skill covers ARM Cortex-M ISR/Memory correctly or needs an ARM-specific variant.
+
+**Design decisions to make:**
+- PlatformIO MCP: light wrapper (just forward CLI) or full tool (parse outputs, manage `platformio.ini`)?
+- STM32CubeMX: generate HAL init code headlessly via `java -jar STM32CubeMX` scripting, or rely on PlatformIO's framework-stm32cube + manual pinmux?
+- NXP: MCUXpresso Config Tools are Windows-only — invoke from Windows side via `cmd.exe /c` or use PlatformIO's framework-zephyr for NXP targets.
+
 ## Phase 6 — Mechanical CAD ⬜ (research)
 
 **Goal:** extend the workflow to mechanical design — SolidWorks and/or Fusion 360.
