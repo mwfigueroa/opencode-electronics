@@ -70,7 +70,7 @@ Status legend: ✅ done · 🟡 partial · ⬜ pending
 
 - [ ] `arm-none-eabi-gcc` toolchain (`gcc-arm-none-eabi` package)
 - [ ] PlatformIO CLI installed in WSL (`pip install platformio` or install script)
-- [ ] **PlatformIO MCP bridge** — wrap `platformio` CLI as an MCP server: `pio project init`, `pio run`, `pio upload`, `pio device monitor`, `pio debug`, `pio boards`. Model after `esp-mcp` structure (Python, stdio transport, JSON parsing of outputs).
+- [x] **PlatformIO MCP bridge** — wrap `platformio` CLI as an MCP server: `pio project init`, `pio run`, `pio upload`, `pio device monitor`, `pio debug`, `pio boards`. Model after `esp-mcp` structure (Python, stdio transport, JSON parsing of outputs).
 - [ ] ARM GDB configuration — verify `arm-none-eabi-gdb` works with `mcp-server-gdb` and OpenOCD via ST-Link / CMSIS-DAP (already installed).
 - [ ] Custom skills: `stm32-engineer` (HAL, CubeMX patterns, register maps) and `nxp-engineer` (MCUXpresso, LPC/i.MX RT) — similar to existing `embedded-engineer` but vendor-specific.
 - [ ] Test on at least one physical STM32 target (e.g. STM32F103 Blue Pill) and one NXP target (e.g. LPC1768 or i.MX RT1010) — flash, debug, serial.

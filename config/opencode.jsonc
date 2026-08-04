@@ -14,6 +14,14 @@
       "environment": {
         "KICAD_SEARCH_PATHS": "/home/martinf/Jig-Station-Research-NS,/mnt/c/Users/marti/Documents,/mnt/c/Users/marti/OneDrive"
       }
+    },
+    "platformio": {
+      "type": "local",
+      "command": [
+        "/home/martinf/opt/platformio-mcp/.venv/bin/python",
+        "/home/martinf/opt/platformio-mcp/main.py"
+      ],
+      "enabled": true
     }
   }
 }
