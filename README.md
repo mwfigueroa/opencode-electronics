@@ -20,8 +20,8 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 | PCB design | [kicad-mcp](https://github.com/lamaalrajih/kicad-mcp) + `kicad-mcp-server` + KiCad 10.0.5 in WSL | ✅ Working (DRC verified on real projects) |
 | Circuit analysis | Python: lcapy (symbolic), scikit-rf (RF), control (Bode/margins) | ✅ Working |
 | Debug & instruments | openocd 0.12 (JTAG/SWD), sigrok-cli 0.7.2 (SCPI/USBTMC/logic analyzers) | ✅ Installed |
-| Hardware-in-the-loop | `mcp-server-gdb` + `serial-mcp-server` (Rust) | ✅ Connected; real-target test pending |
-| Multi-MCU firmware | **`platformio-mcp`** (our own) — PlatformIO bridge for STM32, NXP, ARM, RISC-V | ✅ Built (15 tools, Phase 5b started) |
+| Hardware-in-the-loop | `mcp-server-gdb` + `serial-mcp-server` (Rust) | ✅ Connected; tested on NXP FRDM-MCXA153 |
+| Multi-MCU firmware | **`platformio-mcp`** (our own) — PlatformIO bridge for STM32, NXP, ARM, RISC-V | ✅ Built and verified (15 tools, physical test passed) |
 | Mechanical CAD | SolidWorks / Fusion 360 integration | ⬜ Research phase |
 
 **MCP servers connected: 8/8** — `kicad`, `kicad-mcp`, `esp-mcp`, `jlcpcb-mcp`, `spicebridge`, `mcp-server-gdb`, `serial-mcp-server`, `platformio-mcp` (our own — Phase 5b)
@@ -34,7 +34,8 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 ├── journal/             ← dated log entries: what was done, verified, and learned
 ├── docs/                ← reproducible setup guides
 ├── config/              ← sanitized opencode config examples
-├── skills/              ← custom OpenCode skills (kicad-review, spice-sim)
+├── skills/              ← custom OpenCode skills (kicad-review, spice-sim, stm32-engineer, nxp-engineer)
+├── platformio-mcp/      ← PlatformIO MCP bridge source (15 tools)
 └── backlog/             ← MCP watchlist, lab-equipment candidates, ideas being evaluated
 ```
 
@@ -44,6 +45,8 @@ Drop-in agent skills (copy into `~/.config/opencode/skills/`):
 
 - [skills/kicad-review](skills/kicad-review/SKILL.md) — full KiCad project audit: ERC/DRC via `kicad-cli`, schematic/PCB checklist, report with prioritized action items.
 - [skills/spice-sim](skills/spice-sim/SKILL.md) — SPICE simulation workflow (ngspice/LTspice/QSPICE): transient, AC, op-point, measurements.
+- [skills/stm32-engineer](skills/stm32-engineer/SKILL.md) — STM32 firmware: HAL/LL, DMA, NVIC, ST-Link debugging, PlatformIO templates for F0/F1/F4/G0/G4/H7/U5.
+- [skills/nxp-engineer](skills/nxp-engineer/SKILL.md) — NXP firmware: LPC17xx (PINSEL/PCONP), i.MX RT (FlexSPI/TCM), Kinetis, CMSIS-DAP debugging.
 
 ## Start reading
 
@@ -54,6 +57,7 @@ Drop-in agent skills (copy into `~/.config/opencode/skills/`):
 - [journal/2026-08-02-first-board-review.md](journal/2026-08-02-first-board-review.md) — same day: first real board review (ASAC FC rev A)
 - [journal/2026-08-02-programmatic-kicad-fixes.md](journal/2026-08-02-programmatic-kicad-fixes.md) — same day: fixing review findings headlessly, with two honest mistakes
 - [journal/2026-08-04-platformio-mcp-bridge.md](journal/2026-08-04-platformio-mcp-bridge.md) — PlatformIO MCP bridge built (STM32, NXP, ARM, RISC-V) + Phase 5b roadmap
+- [journal/2026-08-04-mcxa153-physical-test.md](journal/2026-08-04-mcxa153-physical-test.md) — first physical HIL test: MCXA153 flashed, serial verified, debug probe confirmed
 - [docs/](docs/) — setup guides if you want to replicate this
 
 ## Notes
