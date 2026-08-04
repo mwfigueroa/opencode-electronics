@@ -21,9 +21,10 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 | Circuit analysis | Python: lcapy (symbolic), scikit-rf (RF), control (Bode/margins) | ✅ Working |
 | Debug & instruments | openocd 0.12 (JTAG/SWD), sigrok-cli 0.7.2 (SCPI/USBTMC/logic analyzers) | ✅ Installed |
 | Hardware-in-the-loop | `mcp-server-gdb` + `serial-mcp-server` (Rust) | ✅ Connected; real-target test pending |
+| Multi-MCU firmware | **`platformio-mcp`** (our own) — PlatformIO bridge for STM32, NXP, ARM, RISC-V | ✅ Built (15 tools, Phase 5b started) |
 | Mechanical CAD | SolidWorks / Fusion 360 integration | ⬜ Research phase |
 
-**MCP servers connected: 7/7** — `kicad`, `kicad-mcp`, `esp-mcp`, `jlcpcb-mcp`, `spicebridge`, `mcp-server-gdb`, `serial-mcp-server` (`opencode mcp list`)
+**MCP servers connected: 8/8** — `kicad`, `kicad-mcp`, `esp-mcp`, `jlcpcb-mcp`, `spicebridge`, `mcp-server-gdb`, `serial-mcp-server`, `platformio-mcp` (our own — Phase 5b)
 
 ## Repository layout
 
@@ -52,6 +53,7 @@ Drop-in agent skills (copy into `~/.config/opencode/skills/`):
 - [journal/2026-08-02-circuit-lab-core.md](journal/2026-08-02-circuit-lab-core.md) — same day: KiCad 10 + ngspice + analysis stack, 7/7 servers
 - [journal/2026-08-02-first-board-review.md](journal/2026-08-02-first-board-review.md) — same day: first real board review (ASAC FC rev A)
 - [journal/2026-08-02-programmatic-kicad-fixes.md](journal/2026-08-02-programmatic-kicad-fixes.md) — same day: fixing review findings headlessly, with two honest mistakes
+- [journal/2026-08-04-platformio-mcp-bridge.md](journal/2026-08-04-platformio-mcp-bridge.md) — PlatformIO MCP bridge built (STM32, NXP, ARM, RISC-V) + Phase 5b roadmap
 - [docs/](docs/) — setup guides if you want to replicate this
 
 ## Notes
