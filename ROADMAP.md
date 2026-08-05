@@ -100,7 +100,8 @@ to be as scriptable as the compiler.
 - [x] **Keysight CXA N9000A** — pyvisa SCPI over LAN (VXI-11), skill done
 - [x] **Prodigit 3310F** — pyvisa serial SCPI, skill done
 - [x] **Keysight E36231A** — pyvisa SCPI over LAN, skill done
-- [ ] Physical test on each instrument (capture, sweep, load) — **2/6 done: ADP2230 ✅, E36231A ✅**
+- [x] **Tektronix TBS1102C** — python-usbtmc over USB (WinUSB), cross-instrument verified with ADP2230
+- [ ] Physical test on each instrument (capture, sweep, load) — **3/7 done: ADP2230 ✅, E36231A ✅, TBS1102C ✅**
 - [ ] MCP bridge: `scpi-mcp` — generic SCPI bridge for any VISA instrument
 - [ ] MCP bridge: `pydwf-mcp` — WaveForms SDK bridge for ADP2230
 - [ ] MCP bridge: `hackrf-mcp` — SDR bridge for HackRF One

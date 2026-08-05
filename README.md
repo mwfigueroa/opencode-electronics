@@ -22,7 +22,7 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 | Debug & instruments | openocd 0.12 (JTAG/SWD), sigrok-cli 0.7.2 (SCPI/USBTMC/logic analyzers) | ✅ Installed |
 | Hardware-in-the-loop | `mcp-server-gdb` + `serial-mcp-server` (Rust) | ✅ Connected; tested on NXP FRDM-MCXA153 |
 | Multi-MCU firmware | **`platformio-mcp`** (our own) — PlatformIO bridge for STM32, NXP, ARM, RISC-V | ✅ Built and verified (15 tools, physical test passed) |
-| Test equipment | 6 instruments: ADP2230, N9000A, HackRF, Red Pitaya, Prodigit 3310F, E36231A — Python SDKs + SCPI | ✅ ADP2230 + E36231A tested; N9000A/HackRF/Red Pitaya/Prodigit pending |
+| Test equipment | 7 instruments: ADP2230, TBS1102C, N9000A, HackRF, Red Pitaya, Prodigit 3310F, E36231A | ✅ ADP2230 + E36231A + TBS1102C tested; cross-instrument verified |
 | Mechanical CAD | SolidWorks / Fusion 360 integration | ⬜ Research phase |
 
 **MCP servers connected: 8/8** — `kicad`, `kicad-mcp`, `esp-mcp`, `jlcpcb-mcp`, `spicebridge`, `mcp-server-gdb`, `serial-mcp-server`, `platformio-mcp` (our own — Phase 5b)
@@ -75,6 +75,7 @@ Drop-in agent skills (copy into `~/.config/opencode/skills/`):
 - [journal/2026-08-04-mcxa153-physical-test.md](journal/2026-08-04-mcxa153-physical-test.md) — first physical HIL test: MCXA153 flashed, serial verified, debug probe confirmed
 - [journal/2026-08-04-test-equipment.md](journal/2026-08-04-test-equipment.md) — 6 instruments added: scope, SDR, signal analyzer, PSU, DC load, FPGA platform
 - [journal/2026-08-05-e36231a-discovery.md](journal/2026-08-05-e36231a-discovery.md) — E36231A: LAN discovery, VXI-11 connection, functional test 0-12V (error < 0.03%)
+- [journal/2026-08-05-adp2230-tbs-cross-instrument.md](journal/2026-08-05-adp2230-tbs-cross-instrument.md) — ADP2230 + TBS1102C: cross-instrument verification (generate + measure)
 - [journal/ADP2230-session-2026-08-05.md](journal/ADP2230-session-2026-08-05.md) — ADP2230 MCP: 17 tools implemented, pydwf bridge verified
 - [docs/](docs/) — setup guides if you want to replicate this
 - [docs/05-e36231a-scpi-reference.md](docs/05-e36231a-scpi-reference.md) — E36231A: referencia SCPI completa (español), ejemplos probados
