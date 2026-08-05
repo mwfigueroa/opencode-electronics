@@ -5,3 +5,6 @@ Thumbs.db
 *.swp
 .vscode/
 .idea/
+
+# Datasheets / manuals (binarios pesados)
+*.pdf
