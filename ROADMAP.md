@@ -101,7 +101,8 @@ to be as scriptable as the compiler.
 - [x] **Prodigit 3310F** — pyvisa serial SCPI, skill done
 - [x] **Keysight E36231A** — pyvisa SCPI over LAN, skill done
 - [x] **Tektronix TBS1102C** — python-usbtmc over USB (WinUSB), cross-instrument verified with ADP2230
-- [ ] Physical test on each instrument (capture, sweep, load) — **3/7 done: ADP2230 ✅, E36231A ✅, TBS1102C ✅**
+- [x] **Digilent Nexys A7-100T** — OpenFPGALoader JTAG, FPGA toolchain (yosys, iverilog, verilator, cocotb, LiteX), diseño LED+UART listo
+- [ ] Physical test on each instrument (capture, sweep, load) — **4/8 done: ADP2230 ✅, E36231A ✅, TBS1102C ✅, Nexys A7 ✅**
 - [ ] MCP bridge: `scpi-mcp` — generic SCPI bridge for any VISA instrument
 - [ ] MCP bridge: `pydwf-mcp` — WaveForms SDK bridge for ADP2230
 - [ ] MCP bridge: `hackrf-mcp` — SDR bridge for HackRF One
