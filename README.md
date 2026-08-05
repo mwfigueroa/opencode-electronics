@@ -79,6 +79,7 @@ Drop-in agent skills (copy into `~/.config/opencode/skills/`):
 - [journal/ADP2230-session-2026-08-05.md](journal/ADP2230-session-2026-08-05.md) — ADP2230 MCP: 17 tools implemented, pydwf bridge verified
 - [docs/](docs/) — setup guides if you want to replicate this
 - [docs/05-e36231a-scpi-reference.md](docs/05-e36231a-scpi-reference.md) — E36231A: referencia SCPI completa (español), ejemplos probados
+- [docs/06-tbs1102c-guide.md](docs/06-tbs1102c-guide.md) — TBS1102C: guía completa de capacidades, SCPI probado, casos de uso
 
 ## Notes
 
