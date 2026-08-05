@@ -33,12 +33,42 @@ mcp = FastMCP("ADP2230")
 
 # ─── helpers ────────────────────────────────────────────────────────────────
 
+import threading
+
 _dwf = DwfLibrary()
+_device = None
+_device_lock = threading.Lock()
+
+
+class _PersistentDevice:
+    """Wraps a DwfDevice in a context manager that never closes it.
+    
+    This keeps the device alive across tool calls, so AWG and
+    pattern generator outputs persist after the tool returns.
+    """
+    def __init__(self, device):
+        self._device = device
+    
+    def __enter__(self):
+        return self._device
+    
+    def __exit__(self, *args):
+        pass  # Never close — device stays alive for MCP lifetime
 
 
 def _get_device():
-    """Open the ADP2230 device. Caller must close it."""
-    return openDwfDevice(_dwf)
+    """Get or create a persistent ADP2230 device connection.
+    
+    Returns a context manager that provides the device but never
+    closes it, so AWG/pattern generator keep running.
+    """
+    global _device
+    if _device is None:
+        with _device_lock:
+            if _device is None:
+                ctx = openDwfDevice(_dwf)
+                _device = ctx.__enter__()
+    return _PersistentDevice(_device)
 
 
 def _wait_acquisition(ain, timeout_s: float = 5.0) -> bool:
