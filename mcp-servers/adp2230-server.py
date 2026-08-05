@@ -19,6 +19,8 @@ from pydwf import (
     DwfAnalogOutFunction,
     DwfAnalogOutNode,
     DwfAnalogOutIdle,
+    DwfAnalogImpedance,
+    DwfAnalogIO,
     DwfDigitalInSampleMode,
     DwfDigitalInClockSource,
     DwfDigitalOutOutput,
@@ -536,6 +538,607 @@ def gpio_control(pin: int, direction: str = "input", value: Optional[int] = None
         "voltage_v": float(volt),
         "output_enabled": bool(out_en > 0.5),
     }
+
+
+# ─── digital I/O (static) ────────────────────────────────────────────────────
+
+@mcp.tool()
+def digital_io(
+    output_enable_mask: int = 0,
+    output_value_mask: int = 0,
+) -> dict:
+    """Read/write all 16 DIO pins as a static bitmask (no timing/trigger).
+
+    Use this for low-speed static I/O: read input states, set output
+    enables, and drive pins high/low.  Conflicts with pattern_generator
+    and logic_analyzer when active on the same pins.
+
+    Args:
+        output_enable_mask: Bitmask of pins to drive as outputs (0=HiZ, 1=output).
+        output_value_mask: Bitmask of output values (1=high). Only applies
+            to pins where output_enable_mask has the bit set.
+
+    Returns:
+        dict with input_status (bitmask of pins reading high),
+        output_enable, output_value, and per-pin list.
+    """
+    with _get_device() as dev:
+        dio = dev.digitalIO
+        dio.reset()
+        dio.outputEnableSet(output_enable_mask)
+        dio.outputSet(output_value_mask)
+        dio.configure()
+        time.sleep(0.01)
+        dio.status()
+        inputs = dio.inputStatus()
+        out_en = dio.outputEnableGet()
+        out_val = dio.outputGet()
+
+    pins = []
+    for p in range(16):
+        pins.append({
+            "pin": p,
+            "input_state": (inputs >> p) & 1,
+            "output_enabled": (out_en >> p) & 1,
+            "output_value": (out_val >> p) & 1,
+        })
+
+    return {
+        "input_status_mask": inputs,
+        "output_enable_mask": out_en,
+        "output_value_mask": out_val,
+        "pins": pins,
+    }
+
+
+# ─── analog I/O (power supplies / sensors) ───────────────────────────────────
+
+@mcp.tool()
+def analog_io(
+    channel_name: str = "",
+    node_name: str = "",
+    value: Optional[float] = None,
+    master_enable: Optional[bool] = None,
+) -> dict:
+    """Read or control the ADP2230 analog I/O channels (power supplies, sensors).
+
+    The ADP2230 exposes channels for digital voltage (DVCC), Zynq temperature,
+    Zynq internal voltages, etc.  Pass channel_name='' to enumerate all
+    channels and nodes.
+
+    Args:
+        channel_name: Channel label (e.g. 'DVCC', 'Zynq'). Empty = enumerate all.
+        node_name: Node name (e.g. 'Voltage', 'Temperature'). Empty = all nodes.
+        value: If set, write this value to the specified channel node.
+        master_enable: If set, enable/disable the master power switch.
+
+    Returns:
+        dict with channels list or the written/read value.
+    """
+    with _get_device() as dev:
+        aio = dev.analogIO
+
+        if master_enable is not None:
+            aio.enableSet(master_enable)
+        aio.configure()
+        aio.status()
+
+        channels = []
+        for c in range(aio.channelCount()):
+            ch_name, ch_label = aio.channelName(c)
+            if channel_name and ch_label != channel_name:
+                continue
+            ch_info = {"index": c, "name": ch_name, "label": ch_label, "nodes": []}
+            for n in range(aio.channelInfo(c)):
+                n_name, n_unit = aio.channelNodeName(c, n)
+                if node_name and n_name != node_name:
+                    continue
+                node_type = str(aio.channelNodeInfo(c, n))
+                status_val = aio.channelNodeStatus(c, n)
+                set_val = aio.channelNodeGet(c, n)
+
+                if value is not None and n_name == node_name and ch_label == channel_name:
+                    aio.channelNodeSet(c, n, value)
+                    aio.configure()
+                    set_val = value
+
+                ch_info["nodes"].append({
+                    "index": n, "name": n_name, "unit": n_unit,
+                    "type": node_type, "status": status_val, "set_value": set_val,
+                })
+            channels.append(ch_info)
+
+        aio.status()
+        master = aio.enableGet() if aio.enableInfo()[0] else None
+        master_status = aio.enableStatus() if aio.enableInfo()[1] else None
+
+    return {
+        "master_enable": master,
+        "master_enable_status": master_status,
+        "channels": channels,
+    }
+
+
+# ─── UART protocol ───────────────────────────────────────────────────────────
+
+@mcp.tool()
+def uart(
+    baud_rate: int = 115200,
+    tx_pin: int = 0,
+    rx_pin: int = 1,
+    data_bits: int = 8,
+    parity: str = "none",
+    stop_bits: float = 1.0,
+    tx_data: Optional[str] = None,
+    rx_count: int = 0,
+) -> dict:
+    """UART transmitter/receiver using two DIO pins.
+
+    Configure baud rate, data bits, parity, and stop bits. Send tx_data
+    (string, encoded as UTF-8 bytes) and optionally receive rx_count bytes.
+
+    Args:
+        baud_rate: Baud rate (300, 9600, 115200, etc.).
+        tx_pin: DIO pin for TX (transmit).
+        rx_pin: DIO pin for RX (receive).
+        data_bits: Data bits (7 or 8).
+        parity: 'none', 'odd', or 'even'.
+        stop_bits: Stop bits (1, 1.5, or 2).
+        tx_data: String to transmit (leave empty to skip TX).
+        rx_count: Number of bytes to receive (0 = skip RX).
+
+    Returns:
+        dict with tx_bytes_sent and rx_data/received bytes.
+    """
+    parity_map = {"none": 0, "odd": 1, "even": 2}
+
+    with _get_device() as dev:
+        u = dev.protocol.uart
+        u.reset()
+        u.rateSet(float(baud_rate))
+        u.bitsSet(data_bits)
+        u.paritySet(parity_map.get(parity, 0))
+        u.stopSet(stop_bits)
+        u.txSet(tx_pin)
+        u.rxSet(rx_pin)
+
+        result = {"baud_rate": baud_rate, "tx_pin": tx_pin, "rx_pin": rx_pin}
+
+        if tx_data is not None:
+            tx_bytes = tx_data.encode("utf-8")
+            u.tx(tx_bytes)
+            result["tx_bytes_sent"] = len(tx_bytes)
+
+        if rx_count > 0:
+            u.rx(0)  # initialize receiver
+            rx_bytes, parity_err = u.rx(rx_count)
+            result["rx_data"] = list(rx_bytes)
+            result["rx_parity_error"] = parity_err
+
+    return result
+
+
+# ─── SPI protocol ────────────────────────────────────────────────────────────
+
+@mcp.tool()
+def spi(
+    clock_freq_hz: float = 1_000_000.0,
+    mode: int = 0,
+    cs_pin: int = 0,
+    sck_pin: int = 1,
+    mosi_pin: int = 2,
+    miso_pin: int = 3,
+    tx_data: Optional[str] = None,
+    rx_count: int = 0,
+    bits_per_word: int = 8,
+) -> dict:
+    """SPI master using four DIO pins.
+
+    Transmit tx_data (hex string, e.g. '0xA5,0x5A') and optionally
+    read back rx_count bytes from the slave device.
+
+    Args:
+        clock_freq_hz: SPI clock frequency in Hz.
+        mode: SPI mode 0-3 (CPOL/CPHA).
+        cs_pin: DIO pin for Chip Select.
+        sck_pin: DIO pin for Clock.
+        mosi_pin: DIO pin for MOSI (Master Out).
+        miso_pin: DIO pin for MISO (Master In).
+        tx_data: Comma-separated hex bytes to transmit (e.g. '0x9F').
+        rx_count: Number of bytes to read from MISO (0 = skip).
+        bits_per_word: Bits per word (default 8).
+
+    Returns:
+        dict with tx_bytes and rx_data.
+    """
+    with _get_device() as dev:
+        s = dev.protocol.spi
+        s.reset()
+        s.frequencySet(clock_freq_hz)
+        s.modeSet(mode)
+        s.orderSet(0)  # MSB first
+        s.select(cs_pin, 1)  # enable CS
+        s.ioSet(sck_pin, mosi_pin, miso_pin, 0)  # SCK, MOSI, MISO, unused
+
+        result = {"clock_freq_hz": clock_freq_hz, "mode": mode, "cs_pin": cs_pin}
+
+        tx_bytes = b""
+        if tx_data is not None:
+            parts = [x.strip() for x in tx_data.split(",")]
+            tx_bytes = bytes(int(p, 16) for p in parts if p)
+
+        total_to_exchange = max(len(tx_bytes), rx_count)
+        if total_to_exchange > 0:
+            mosi = list(tx_bytes) + [0] * max(0, total_to_exchange - len(tx_bytes))
+            rx, count = s.writeRead(bits_per_word, mosi, total_to_exchange)
+            result["tx_bytes"] = mosi[:total_to_exchange]
+            result["rx_data"] = rx if rx_count > 0 else []
+
+        s.select(cs_pin, 0)  # disable CS
+
+    return result
+
+
+# ─── I²C protocol ────────────────────────────────────────────────────────────
+
+@mcp.tool()
+def i2c(
+    sda_pin: int = 0,
+    scl_pin: int = 1,
+    clock_freq_hz: float = 100_000.0,
+    address: int = 0x50,
+    tx_data: Optional[str] = None,
+    rx_count: int = 0,
+) -> dict:
+    """I²C master using two DIO pins (SDA, SCL).
+
+    Transmit tx_data (hex string) and/or read rx_count bytes from the
+    specified 7-bit I²C address.  Uses internal pull-ups; add external
+    2.2k-4.7k pull-ups to VCC for reliable operation above 100 kHz.
+
+    Args:
+        sda_pin: DIO pin for SDA (data).
+        scl_pin: DIO pin for SCL (clock).
+        clock_freq_hz: I²C clock frequency (100 kHz standard, 400 kHz fast).
+        address: 7-bit I²C slave address.
+        tx_data: Comma-separated hex bytes to write (e.g. '0x00,0x42').
+        rx_count: Number of bytes to read after write (0 = skip).
+
+    Returns:
+        dict with tx_bytes_sent and rx_data.
+    """
+    with _get_device() as dev:
+        i = dev.protocol.i2c
+        i.reset()
+        i.rateSet(clock_freq_hz)
+        i.sdaSet(sda_pin)
+        i.sclSet(scl_pin)
+        i.stretchSet(True)  # clock stretching
+
+        result = {"address": address, "sda_pin": sda_pin, "scl_pin": scl_pin}
+
+        tx_bytes = b""
+        if tx_data is not None:
+            parts = [x.strip() for x in tx_data.split(",")]
+            tx_bytes = bytes(int(p, 16) for p in parts if p)
+
+        if tx_bytes or rx_count > 0:
+            nak = i.writeRead(address, list(tx_bytes), rx_count)
+            result["tx_bytes_sent"] = len(tx_bytes)
+            if rx_count > 0:
+                result["rx_data"] = nak if isinstance(nak, (list, bytes)) else []
+                result["nak"] = nak if isinstance(nak, int) else None
+            else:
+                result["nak"] = nak
+
+    return result
+
+
+# ─── network analyzer (Bode plot) ────────────────────────────────────────────
+
+@mcp.tool()
+def network_analyzer(
+    start_freq_hz: float = 100.0,
+    stop_freq_hz: float = 100_000.0,
+    points: int = 50,
+    amplitude_v: float = 1.0,
+    offset_v: float = 0.0,
+    reference_ohms: float = 0.0,
+    timeout_s: float = 30.0,
+) -> dict:
+    """Frequency response (Bode plot) using AWG1 as stimulus and scope CH1/CH2.
+
+    Sweeps frequency from start_freq_hz to stop_freq_hz (logarithmic),
+    measuring gain (CH2/CH1 in dB) and phase difference at each step.
+    This is the Network Analyzer instrument (analogImpedance mode 0).
+
+    Requires: AWG W1 → DUT input, CH1 → DUT input (reference), CH2 → DUT output.
+
+    Args:
+        start_freq_hz: Start frequency in Hz.
+        stop_freq_hz: Stop frequency in Hz.
+        points: Number of frequency steps (max ~200).
+        amplitude_v: AWG amplitude in volts.
+        offset_v: AWG DC offset in volts.
+        reference_ohms: Reference resistor for impedance mode (0 = Bode mode).
+        timeout_s: Maximum sweep time in seconds.
+
+    Returns:
+        dict with frequencies, gains_db, phases_deg arrays.
+    """
+    with _get_device() as dev:
+        imp = dev.analogImpedance
+        imp.reset()
+
+        if reference_ohms > 0:
+            imp.modeSet(8)  # impedance analyzer
+            imp.referenceSet(reference_ohms)
+        else:
+            imp.modeSet(0)  # W1-C1-DUT-C2-R-GND (network analyzer)
+            imp.referenceSet(1.0)
+
+        imp.amplitudeSet(amplitude_v)
+        imp.offsetSet(offset_v)
+
+        frequencies = np.logspace(np.log10(start_freq_hz), np.log10(stop_freq_hz), points)
+        gains_db = []
+        phases_deg = []
+        impedances = []
+
+        t0 = time.monotonic()
+
+        for freq in frequencies:
+            if time.monotonic() - t0 > timeout_s:
+                break
+
+            imp.frequencySet(float(freq))
+            imp.configure(True)
+
+            while True:
+                st = imp.status()
+                if st == DwfState.Done:
+                    break
+                if time.monotonic() - t0 > timeout_s:
+                    break
+                time.sleep(0.002)
+
+            if time.monotonic() - t0 > timeout_s:
+                break
+
+            gain_ch1, phase_ch1 = imp.statusInput(0)  # reference
+            gain_ch2, phase_ch2 = imp.statusInput(1)  # DUT output
+
+            gain_db = 20.0 * np.log10(max(gain_ch2 / max(gain_ch1, 1e-9), 1e-9))
+            phase_deg = (phase_ch2 - phase_ch1) * 180.0 / np.pi
+            while phase_deg > 180:
+                phase_deg -= 360
+            while phase_deg < -180:
+                phase_deg += 360
+
+            gains_db.append(round(gain_db, 3))
+            phases_deg.append(round(phase_deg, 3))
+
+            if reference_ohms > 0:
+                imp_mag = imp.statusMeasure(DwfAnalogImpedance.Impedance)
+                imp_phase = imp.statusMeasure(DwfAnalogImpedance.ImpedancePhase)
+                impedances.append({
+                    "freq_hz": round(freq, 1),
+                    "impedance_ohm": round(imp_mag, 3),
+                    "phase_deg": round(imp_phase, 3),
+                })
+
+    result = {
+        "start_freq_hz": start_freq_hz,
+        "stop_freq_hz": stop_freq_hz,
+        "points_measured": len(gains_db),
+        "amplitude_v": amplitude_v,
+        "mode": "impedance" if reference_ohms > 0 else "network",
+        "frequencies_hz": [round(f, 1) for f in frequencies[:len(gains_db)]],
+        "gains_db": gains_db,
+        "phases_deg": phases_deg,
+    }
+
+    if impedances:
+        result["impedances"] = impedances
+
+    return result
+
+
+# ─── impedance analyzer (single-point) ───────────────────────────────────────
+
+@mcp.tool()
+def impedance_analyzer(
+    frequency_hz: float = 1000.0,
+    reference_ohms: float = 1000.0,
+    amplitude_v: float = 1.0,
+    offset_v: float = 0.0,
+) -> dict:
+    """Measure impedance of a DUT at a single frequency.
+
+    Uses the ADP2230 Impedance Analyzer (mode 8) with an external reference
+    resistor.  Requires: AWG W1 → Rref → DUT → GND, CH1 across DUT,
+    CH2 across Rref.
+
+    Args:
+        frequency_hz: Test frequency in Hz.
+        reference_ohms: Reference resistor value in ohms.
+        amplitude_v: Stimulus amplitude in volts.
+        offset_v: Stimulus DC offset in volts.
+
+    Returns:
+        dict with impedance magnitude, phase, resistance, reactance,
+        and derived R/L/C at the test frequency.
+    """
+    with _get_device() as dev:
+        imp = dev.analogImpedance
+        imp.reset()
+        imp.modeSet(8)
+        imp.referenceSet(reference_ohms)
+        imp.amplitudeSet(amplitude_v)
+        imp.offsetSet(offset_v)
+        imp.frequencySet(frequency_hz)
+
+        imp.configure(True)
+        t0 = time.monotonic()
+        while imp.status() != DwfState.Done:
+            if time.monotonic() - t0 > 5.0:
+                return {"error": "Impedance measurement timed out"}
+            time.sleep(0.002)
+
+        imp_mag = imp.statusMeasure(DwfAnalogImpedance.Impedance)
+        imp_phase = imp.statusMeasure(DwfAnalogImpedance.ImpedancePhase)
+        resistance = imp.statusMeasure(DwfAnalogImpedance.Resistance)
+        reactance = imp.statusMeasure(DwfAnalogImpedance.Reactance)
+
+    omega = 2.0 * np.pi * frequency_hz
+    inductance = None
+    capacitance = None
+    if reactance > 0 and omega > 0:
+        inductance = reactance / omega
+    elif reactance < 0 and omega > 0:
+        capacitance = -1.0 / (omega * reactance)
+
+    return {
+        "frequency_hz": frequency_hz,
+        "reference_ohms": reference_ohms,
+        "impedance_ohm": round(imp_mag, 3),
+        "phase_deg": round(imp_phase, 3),
+        "resistance_ohm": round(resistance, 3),
+        "reactance_ohm": round(reactance, 3),
+        "inductance_H": round(inductance, 9) if inductance else None,
+        "capacitance_F": round(capacitance, 12) if capacitance else None,
+    }
+
+
+# ─── CAN protocol ────────────────────────────────────────────────────────────
+
+@mcp.tool()
+def can(
+    bit_rate: int = 500_000,
+    tx_pin: int = 0,
+    rx_pin: int = 1,
+    tx_id: int = 0x100,
+    tx_data: Optional[str] = None,
+    is_extended: bool = False,
+    is_remote: bool = False,
+    rx_count: int = 0,
+) -> dict:
+    """CAN bus transmitter/receiver using two DIO pins.
+
+    NOTE: Requires an external CAN transceiver (e.g. MCP2551, SN65HVD230)
+    to convert the 3.3V DIO signals to CAN bus differential levels.
+
+    Args:
+        bit_rate: CAN bit rate (125000, 250000, 500000, 1000000).
+        tx_pin: DIO pin for TX (connect to transceiver TXD).
+        rx_pin: DIO pin for RX (connect to transceiver RXD).
+        tx_id: CAN message ID (11-bit standard or 29-bit extended).
+        tx_data: Comma-separated hex bytes (max 8 for CAN).
+        is_extended: Use 29-bit extended ID.
+        is_remote: Send a remote frame.
+        rx_count: Number of frames to receive (0 = skip RX).
+
+    Returns:
+        dict with tx_status and rx_frames.
+    """
+    with _get_device() as dev:
+        c = dev.protocol.can
+        c.reset()
+        c.rateSet(float(bit_rate))
+        c.txSet(tx_pin)
+        c.rxSet(rx_pin)
+
+        result = {"bit_rate": bit_rate, "tx_pin": tx_pin, "rx_pin": rx_pin}
+
+        if tx_data is not None:
+            parts = [x.strip() for x in tx_data.split(",")]
+            tx_bytes = [int(p, 16) for p in parts if p]
+            flags = 0
+            if is_extended:
+                flags |= 1
+            if is_remote:
+                flags |= 2
+            c.tx(tx_id, tx_bytes[:8], flags)
+            result["tx_id"] = tx_id
+            result["tx_data"] = tx_bytes[:8]
+            result["tx_extended"] = is_extended
+            result["tx_remote"] = is_remote
+
+        if rx_count > 0:
+            c.rx(0)  # initialize receiver
+            frames = []
+            import struct
+            for _ in range(rx_count):
+                try:
+                    rx_id, rx_data, rx_flags, rx_status = c.rx(1)
+                    if rx_status == 3:  # DwfStateDone = 3
+                        pass
+                    if rx_data:
+                        frames.append({
+                            "id": rx_id,
+                            "data": list(rx_data) if rx_data else [],
+                            "extended": bool(rx_flags & 1),
+                            "remote": bool(rx_flags & 2),
+                            "status": rx_status,
+                        })
+                except Exception:
+                    break
+            result["rx_frames"] = frames
+
+    return result
+
+
+# ─── SWD protocol ────────────────────────────────────────────────────────────
+
+@mcp.tool()
+def swd(
+    clock_freq_hz: float = 1_000_000.0,
+    dio_pin: int = 0,
+    clk_pin: int = 1,
+    command: Optional[str] = None,
+) -> dict:
+    """ARM Serial Wire Debug (SWD) interface using two DIO pins.
+
+    Low-level SWD bus interface.  Connect DIO pin → SWDIO, CLK pin → SWCLK
+    on an ARM Cortex-M target.  Use for reading IDCODE, accessing DP/AP
+    registers, or flashing targets that speak SWD.
+
+    WARNING: This is a raw SWD interface.  Incorrect commands can lock up
+    the target or corrupt firmware.  Prefer using OpenOCD + JTAG/SWD probe
+    for production debugging.
+
+    Args:
+        clock_freq_hz: SWD clock frequency in Hz.
+        dio_pin: DIO pin for SWDIO (bidirectional data).
+        clk_pin: DIO pin for SWCLK (clock).
+        command: Comma-separated hex bytes to write. If empty, reads back
+            a response (performs turnaround).
+
+    Returns:
+        dict with tx_bytes, rx_data, and bus status.
+    """
+    with _get_device() as dev:
+        s = dev.protocol.swd
+        s.reset()
+        s.rateSet(clock_freq_hz)
+        s.ioSet(dio_pin)
+        s.clkSet(clk_pin)
+
+        result = {"clock_freq_hz": clock_freq_hz, "dio_pin": dio_pin, "clk_pin": clk_pin}
+
+        if command is not None:
+            parts = [x.strip() for x in command.split(",")]
+            tx = [int(p, 16) for p in parts if p]
+            s.write(tx)
+            result["tx_bytes"] = tx
+
+        if command is None or len(parts) > 0:
+            time.sleep(0.001)
+            rx, parity = s.read(4)  # read back 4 bytes
+            result["rx_data"] = rx if rx else []
+            result["parity"] = parity
+
+    return result
 
 
 # ─── main ───────────────────────────────────────────────────────────────────
