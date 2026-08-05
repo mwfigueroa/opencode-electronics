@@ -77,6 +77,7 @@ Drop-in agent skills (copy into `~/.config/opencode/skills/`):
 - [journal/2026-08-05-e36231a-discovery.md](journal/2026-08-05-e36231a-discovery.md) — E36231A: LAN discovery, VXI-11 connection, functional test 0-12V (error < 0.03%)
 - [journal/ADP2230-session-2026-08-05.md](journal/ADP2230-session-2026-08-05.md) — ADP2230 MCP: 17 tools implemented, pydwf bridge verified
 - [docs/](docs/) — setup guides if you want to replicate this
+- [docs/05-e36231a-scpi-reference.md](docs/05-e36231a-scpi-reference.md) — E36231A: referencia SCPI completa (español), ejemplos probados
 
 ## Notes
 
