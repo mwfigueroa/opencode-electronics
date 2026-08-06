@@ -4,34 +4,40 @@
 
 ### Nexys A7
 - ✅ JTAG: XC7A100T, Flash QSPI programada
-- ✅ Frecuencímetro calibrado 0.13% vs TBS
+- ✅ Frecuencímetro calibrado 0.13%
 - ✅ UART TX 115200, Display 7-seg
 - ❌ UART RX (hardware FTDI→C4)
 
 ### ADP2230
 - ✅ AWG + Scope + Logic Analyzer
-- ✅ `awg_sweep`: barridos log/lineal, multiciclo, variable dwell
-- ✅ Sweep verificado con TBS (100 Hz → 500 kHz)
-- 🔧 Fix final: `configure(True)` en loop + mantener salida al final
+- ✅ Barrido con `awg_generate` individual
+- ⚠️ `awg_sweep`: implementado pero limitado por pydwf
+  - `configure(True)` no re-aplica frecuencia en AWG corriendo
+  - Workaround: usar `awg_generate` por paso
+  - Futuro: explorar FM modulation o custom waveforms
 
 ### Cross-Instrument
-- ✅ Triple: ADP2230 + TBS1102C + Nexys A7 (0.13% error)
-- ✅ Barrido de frecuencia verificado
+- ✅ Triple: ADP2230 + TBS1102C + Nexys A7 (0.13%)
+
+---
+
+## Lecciones
+1. ADP2230 `amplitude_vpp` = pico
+2. NUNCA 5V en LVCMOS33
+3. JTAG interfiere FTDI UART → flash + power cycle
+4. pydwf `configure(True)` no cambia frecuencia on-the-fly
+5. `awg_generate` requiere TODOS los parámetros
 
 ---
 
 ## Comandos
-
 ```bash
-# Síntesis Nexys
-P:\AMDDesignTools\2026.1\Vivado\bin\vivado -mode batch -source P:\NexysA7\scripts\build.tcl
-
-# Flash
+# Nexys flash
 wsl openFPGALoader -b nexys_a7_100 -f --unprotect-flash /mnt/p/NexysA7/bitstreams/top.bit
 
-# UART
+# UART Nexys
 wsl python3 -c "import serial; s=serial.Serial('/dev/ttyUSB1',115200,timeout=4); print(s.read(200).decode())"
 
-# Sweep ADP2230
-# > "barrido 100Hz a 500kHz, 10 puntos, cuadrado 3.3Vpp, 0.6s"
+# Barrido (workaround: llamadas individuales)
+# > "genera 100Hz cuadrado" → "genera 500Hz cuadrado" → ...
 ```
