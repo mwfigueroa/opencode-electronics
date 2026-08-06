@@ -12,7 +12,7 @@
 - ✅ AWG + Scope + Logic Analyzer
 - ✅ `awg_sweep`: barridos log/lineal, multiciclo, variable dwell
 - ✅ Sweep verificado con TBS (100 Hz → 500 kHz)
-- 🔧 Bug fix: `configure(False)` + mantener salida al terminar
+- 🔧 Fix final: `configure(True)` en loop + mantener salida al final
 
 ### Cross-Instrument
 - ✅ Triple: ADP2230 + TBS1102C + Nexys A7 (0.13% error)
