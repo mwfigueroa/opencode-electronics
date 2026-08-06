@@ -147,9 +147,10 @@ litex_soc_gen --cpu=vexriscv --build --load
 - [x] Activar licencia Vivado Basic Tier (Host ID: D843AE8CEFC5)
 - [x] Sintetizar `top.bit` — **3.65 MB, 0 errores, 0 warnings, WNS=+6.49ns**
 - [x] Programar la Nexys A7 vía JTAG con OpenFPGALoader — **100% cargado**
-- [ ] Verificar LED[0] parpadeando (remoto, confirmación mañana)
-- [ ] Corregir pines UART del FTDI canal B (requiere manual de referencia)
-- [ ] Verificar UART echo con picocom
+- [x] Verificar LED[0] parpadeando — ✅ Confirmado (6-Ago)
+- [x] Corregir pines UART del FTDI canal B — ✅ Pines C4/D4 verificados contra XDC oficial
+- [x] Verificar UART TX — ✅ Funcionando (beacon "Nexys A7 Online" cada 2s)
+- [ ] Verificar UART RX — ❌ No recibe datos del FTDI (loopback interno confirmado → problema entre FTDI y pin C4)
 - [ ] Probar cocotb para testbench automatizado del diseño
 - [ ] Explorar LiteX para SoC con RISC-V en la Nexys
 - [ ] Usar ADP2230 logic analyzer para decodificar señales del FPGA
@@ -195,6 +196,19 @@ openFPGALoader -b nexys_a7_100 /mnt/p/NexysA7/bitstreams/top.bit
 # → Load SRAM: 100% Done
 ```
 
-### Pendiente: UART
+### UART Debug (6-Ago-2026)
 
-El UART echo no respondió en prueba inicial. Los pines `C4`/`D4` podrían no corresponder al canal B real del FTDI FT2232H en la Nexys A7. Se requiere verificar contra el manual de referencia de Digilent. El LED[0] debería parpadear independientemente.
+**Descubrimientos:**
+- Pines **C4/D4 confirmados** contra XDC oficial de Digilent ✅
+- **UART TX funciona**: beacon "Nexys A7 Online" recibido en `/dev/ttyUSB1` @ 115200 ✅
+- **UART RX NO funciona**: no se detectan start bits desde el FTDI hacia C4 ❌
+- **Loopback interno** (TX → RX dentro del FPGA) **funciona**: confirma que el código Verilog es correcto ✅
+- **Diagnóstico**: la señal del FTDI canal B no está llegando al pin C4 del FPGA. Posible problema de hardware (pista, cold joint, o configuración del FTDI)
+
+**Pruebas realizadas:**
+1. Diseño beacon: TX envía "Nexys A7 Online" → recibido OK
+2. Loopback interno: `wire rx_line = tx` → eco funcional, LEDs de conteo RX incrementan
+3. Programación QSPI flash: exitosa, diseño persiste entre power cycles
+4. ADP2230 scope en pin C4: intentado pero la punta no hizo contacto (pin es BGA interno)
+
+**Conclusión**: el diseño Verilog es correcto. La Nexys A7 funciona como transmisor UART. Para usar RX se necesita debuggear la ruta FTDI→C4 con acceso físico al pin (en el chip FTDI, no en el BGA del FPGA).
