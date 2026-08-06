@@ -1,99 +1,89 @@
 # Nexys A7 + ADP2230 — Sesión 5-6 Agosto 2026
 
-## Logros
+## Logros Completos
 
 ### Día 1 (5-Ago)
 - ✅ Nexys A7 detectada (JTAG: XC7A100T, IDCODE 0x03631093)
-- ✅ Toolchain FPGA instalado (10 herramientas en WSL)
-- ✅ Vivado 2026.1 instalado y licenciado (Basic Tier, P:\AMDDesignTools\)
+- ✅ Toolchain FPGA (10 herramientas WSL)
+- ✅ Vivado 2026.1 + licencia Basic Tier
 - ✅ LED blinker + UART echo sintetizado (0 errores)
-- ✅ Bitstream generado (3.65 MB) y programado vía JTAG
+- ✅ Bitstream 3.65 MB generado y programado
 - ✅ LED[0] parpadeando confirmado
 
 ### Día 2 (6-Ago)
 - ✅ Pines UART C4/D4 verificados contra XDC oficial
-- ✅ UART TX funcionando (beacon + contador de frecuencia)
-- ❌ UART RX no funciona (problema hardware FTDI→pin C4)
-- ✅ Loopback interno confirma código Verilog correcto
-- ✅ Programación QSPI flash (diseño persiste entre power cycles)
+- ✅ UART TX: beacon + contador frecuencia
+- ❌ UART RX: hardware FTDI→C4 (loopback interno OK)
+- ✅ Flash QSPI programada (diseño persistente)
 - ✅ **Triple cross-instrument**: ADP2230 → TBS1102C + Nexys A7
-- ✅ Contador de frecuencia calibrado (error 0.13% vs TBS)
-- ✅ Barrido de frecuencia ADP2230 → TBS verificado
-- ✅ Nueva herramienta `awg_sweep` agregada al MCP server
+- ✅ Contador calibrado 0.13% vs TBS
+- ✅ **`awg_sweep`**: barridos automatizados de frecuencia
+- ✅ Tiempo variable de dwell (0.5s→3s) agregado al MCP
+
+---
+
+## awg_sweep — Nueva Herramienta MCP
+
+### Funcionalidades
+| Feature | Estado |
+|---|---|
+| Barrido log/lineal | ✅ |
+| Múltiples ciclos | ✅ |
+| Tiempo fijo por paso | ✅ |
+| Tiempo variable (0.5s→3s) | ✅ (código listo, requiere reinicio) |
+| Waveform configurable | ✅ |
+| No resetea parámetros | ✅ |
+
+### Uso
+```
+> "barrido de 100 Hz a 1 MHz, 20 puntos, 5 ciclos, senoidal 2Vpp"
+> "sweep cuadrado 50Hz a 500kHz, 13 puntos, 10 ciclos, 0.5s a 3s"
+```
+
+### Pendiente
+- Sweeps largos (>30s) bloquean MCP → necesita async
 
 ---
 
 ## Cross-Instrument Final
 
 ```
-ADP2230 AWG (W1) ──► Nexys A7 Pmod JD[1] (H4) ──► Frecuencímetro
-     │                      │
-     │                      └──► UART 115200 → "010000"
+ADP2230 AWG ──► Nexys A7 (H4) ──► Contador + UART
      │
-     └──────────────────► TBS1102C CH1 ──► "10.013 kHz"
+     └────────► TBS1102C CH1 ──► Medición automática
 ```
 
-| Instrumento | Frecuencia | Vpp |
-|---|---|---|
-| ADP2230 (set) | 10 000 Hz | 3.3V |
-| TBS1102C (ref) | 10 013 Hz | 3.36V |
-| Nexys A7 | **10 000 Hz** | — |
-
-**Error: 0.13%** — calibración exitosa.
+| Instr. | Rol | Freq | Error |
+|---|---|---|---|
+| ADP2230 | Genera | 10 kHz | — |
+| TBS1102C | Ref | 10.013 kHz | — |
+| Nexys A7 | Mide | **10.000 kHz** | **0.13%** |
 
 ---
 
-## Nexys A7 — Estado Final
+## Lecciones
 
-| Función | Estado |
-|---|---|
-| LED blinker | ✅ LED[0] ~0.75 Hz |
-| UART TX | ✅ 115200 baud |
-| UART RX | ❌ HW: FTDI→C4 sin señal |
-| Frecuencímetro | ✅ Calibrado, 0.13% error |
-| Display 7-seg | ✅ Muestra kHz |
-| Flash QSPI | ✅ Diseño persistente |
-| Vivado 2026.1 | ✅ Licencia Basic Tier |
-| JTAG | ✅ OpenFPGALoader |
-
----
-
-## Lecciones Aprendidas
-
-1. **ADP2230 `amplitude_vpp`** = pico (no pico a pico). amp=1.65 = 3.3Vpp real
-2. **NUNCA 5V en LVCMOS33**: Vmax seguro = 3.45V
-3. **JTAG interfiere con FTDI UART**: programar flash + power cycle
-4. **El MCP `awg_generate` resetea parámetros no especificados**: siempre pasar TODOS
-5. **Contador necesitó calibración**: gate 93.2M ciclos + corrección ×1073/1000
-6. **`awg_sweep`** agregado al MCP server: barridos automatizados sin reset
+1. ADP2230 `amplitude_vpp` = pico (no pico a pico)
+2. NUNCA 5V en LVCMOS33 (max 3.45V)
+3. JTAG interfiere con FTDI UART → flash + power cycle
+4. MCP `awg_generate` resetea params → usar `awg_sweep`
+5. Contador: gate 93.2M ciclos + corrección ×1073/1000
+6. Sweeps largos necesitan async en MCP server
 
 ---
 
 ## Comandos Rápidos
 
 ```bash
-# Sintetizar
+# Síntesis
 P:\AMDDesignTools\2026.1\Vivado\bin\vivado -mode batch -source P:\NexysA7\scripts\build.tcl
 
-# Programar SRAM (rápido, se pierde al apagar)
-wsl openFPGALoader -b nexys_a7_100 /mnt/p/NexysA7/bitstreams/top.bit
-
-# Programar FLASH (persistente)
+# Programar FLASH
 wsl openFPGALoader -b nexys_a7_100 -f --unprotect-flash /mnt/p/NexysA7/bitstreams/top.bit
 
 # Leer UART
 wsl python3 -c "import serial; s=serial.Serial('/dev/ttyUSB1',115200,timeout=4); print(s.read(200).decode())"
 
-# Barrido con ADP2230
-# > "hace un barrido de 50 Hz a 500 kHz, 13 puntos, 10 ciclos"
+# Barrido (desde OpenCode)
+# > "barrido de 100 Hz a 1 MHz, 20 puntos, 5 ciclos, senoidal 2Vpp"
 ```
-
----
-
-## Pendientes
-
-- [ ] Debuggear UART RX (requiere acceso al pin C4 o chip FTDI)
-- [ ] Probar `awg_sweep` post-reinicio de OpenCode
-- [ ] Testbench cocotb para el UART
-- [ ] Explorar LiteX para SoC RISC-V
-- [ ] Barrido ADP2230+Nexys (cuando UART RX funcione)
