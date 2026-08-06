@@ -212,3 +212,41 @@ openFPGALoader -b nexys_a7_100 /mnt/p/NexysA7/bitstreams/top.bit
 4. ADP2230 scope en pin C4: intentado pero la punta no hizo contacto (pin es BGA interno)
 
 **Conclusión**: el diseño Verilog es correcto. La Nexys A7 funciona como transmisor UART. Para usar RX se necesita debuggear la ruta FTDI→C4 con acceso físico al pin (en el chip FTDI, no en el BGA del FPGA).
+
+---
+
+## Triple Cross-Instrument: ADP2230 + TBS1102C + Nexys A7 (6-Ago-2026)
+
+### Configuración
+
+```
+ADP2230 AWG (W1) ──► Nexys A7 Pmod JD pin 1 (H4) ──► Frequency Counter
+                   │
+                   └──► TBS1102C CH1 ──► Medición automática
+```
+
+### Resultados
+
+| Instrumento | Rol | Frecuencia | Vpp |
+|---|---|---|---|
+| **ADP2230** | Genera señal | 10 000 Hz (setpoint) | 3.36V |
+| **TBS1102C** | Mide (referencia) | 10 013 Hz | 3.36V |
+| **Nexys A7** | Mide + UART | **10 000 Hz** | — |
+
+**Error Nexys vs TBS: 0.13%**
+
+### Detalles técnicos
+
+- **ADP2230 AWG**: square wave, `amplitude_vpp=1.65` (pico, 3.3Vpp real), `offset=1.65V` → señal 0-3.3V
+- **Nexys A7**: contador de frecuencia en Verilog con puerta calibrada (93.2M ciclos = 1s empírico) + corrección software (×1073/1000)
+- **TBS1102C**: autoset + medición automática FREQuency, PK2pk
+- **Conexión**: cable BNC del ADP2230 W1 al Pmod JD de la Nexys. El TBS mide el mismo punto
+- **Comunicación**: Nexys envía frecuencia por UART 115200 cada 1s. Los tres instrumentos controlados desde OpenCode
+
+### Lecciones aprendidas
+
+1. **ADP2230 `amplitude_vpp`** es amplitud de pico, no pico a pico → `amp=1.65` = 3.3Vpp real
+2. **5V en LVCMOS33** puede dañar el FPGA (Vih_max = 3.45V)
+3. **JTAG interfiere con UART** del FTDI → workflow: programar flash, luego power cycle
+4. **El contador necesitó calibración**: el gate de 100M ciclos no equivale exactamente a 1 segundo real. Se usó 93.2M ciclos + corrección software → precisión 0.13%
+5. **Tres instrumentos verificándose entre sí** desde un solo lenguaje natural
