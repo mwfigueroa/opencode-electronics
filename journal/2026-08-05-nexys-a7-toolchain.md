@@ -143,9 +143,58 @@ litex_soc_gen --cpu=vexriscv --build --load
 
 ## Próximos pasos
 
-- [ ] Descargar e instalar Vivado ML Standard (AMD requiere login via navegador)
-- [ ] Sintetizar `top.bit` y programar la Nexys A7
+- [x] Descargar e instalar Vivado ML Standard (AMD requiere login via navegador)
+- [x] Activar licencia Vivado Basic Tier (Host ID: D843AE8CEFC5)
+- [x] Sintetizar `top.bit` — **3.65 MB, 0 errores, 0 warnings, WNS=+6.49ns**
+- [x] Programar la Nexys A7 vía JTAG con OpenFPGALoader — **100% cargado**
+- [ ] Verificar LED[0] parpadeando (remoto, confirmación mañana)
+- [ ] Corregir pines UART del FTDI canal B (requiere manual de referencia)
 - [ ] Verificar UART echo con picocom
 - [ ] Probar cocotb para testbench automatizado del diseño
 - [ ] Explorar LiteX para SoC con RISC-V en la Nexys
 - [ ] Usar ADP2230 logic analyzer para decodificar señales del FPGA
+
+---
+
+## Vivado 2026.1 — Instalación y Build
+
+### Instalación
+
+| Dato | Valor |
+|---|---|
+| **Versión** | Vivado v2026.1 (64-bit) |
+| **Build** | 6511674 (Jun 16 2026) |
+| **Ubicación** | `P:\AMDDesignTools\2026.1\Vivado\` |
+| **Dispositivos** | Solo Artix-7 (~15 GB) |
+| **Licencia** | Vivado Basic Tier, Node-Locked |
+| **Host ID** | D843AE8CEFC5 |
+| **Expira** | 06-Ago-2027 |
+| **Cuenta AMD** | martinfigueroa447@hotmail.com |
+
+> **Nota**: AMD cambió el nombre de "Standard Edition" a "Basic Tier License". La licencia es gratuita pero requiere login. El Host ID debe coincidir con la MAC de la placa Ethernet física (no adaptadores virtuales).
+
+### Build exitoso
+
+```
+Vivado v2026.1 | XC7A100T-1CSG324 | Ryzen 9 7900X (12 cores) | 64 GB RAM
+
+Synthesis:     0 errors, 0 warnings
+Implementation: 0 errors, 0 warnings  
+Place:         0 errors, WNS=+6.956 ns
+Route:         Router Completed Successfully (0 unrouted nets)
+Timing:        WNS=+6.491 ns, WHS=+0.232 ns
+Bitstream:     3.65 MB, generated in ~2 min
+
+Total build time: ~4 minutes (Ryzen 7900X, 12 cores)
+```
+
+### Programación
+
+```bash
+openFPGALoader -b nexys_a7_100 /mnt/p/NexysA7/bitstreams/top.bit
+# → Load SRAM: 100% Done
+```
+
+### Pendiente: UART
+
+El UART echo no respondió en prueba inicial. Los pines `C4`/`D4` podrían no corresponder al canal B real del FTDI FT2232H en la Nexys A7. Se requiere verificar contra el manual de referencia de Digilent. El LED[0] debería parpadear independientemente.
