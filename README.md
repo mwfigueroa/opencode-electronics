@@ -27,6 +27,46 @@ General-purpose AI coding assistants know very little about embedded systems, PC
 
 **MCP servers connected: 8/8** — `kicad`, `kicad-mcp`, `esp-mcp`, `jlcpcb-mcp`, `spicebridge`, `mcp-server-gdb`, `serial-mcp-server`, `platformio-mcp` (our own — Phase 5b)
 
+## Lab bench — live instrument map
+
+Physical instruments controllable from OpenCode via natural language. Each is bridged
+through USB (usbipd → WSL) or LAN (pyvisa-py / VXI-11).
+
+### Active & verified
+
+| Instrument | Type | Interface | Bridge | Status |
+|---|---|---|---|---|
+| **Digilent ADP2230** | Oscilloscope / AWG / Logic Analyzer | USB | pydwf (MCP, 18 tools) | 🟢 Tested |
+| **Keysight E36231A** | DC Power Supply 30V/30A/200W | LAN `192.168.1.43` | pyvisa-py (VXI-11) | 🟢 Tested |
+| **Tektronix TBS1102C** | Oscilloscope 100 MHz / 1 GS/s | USB | python-usbtmc (WinUSB) | 🟢 Tested |
+| **NXP FRDM-MCXA153** | Cortex-M33 dev board | USB | CMSIS-DAP + serial | 🟢 Tested |
+| **Digilent Nexys A7-100T** | FPGA Artix-7 XC7A100T | USB | openFPGALoader + UART | 🟢 Tested |
+
+### In ecosystem (SDK ready, not on bench now)
+
+| Instrument | Type | Interface | Bridge |
+|---|---|---|---|
+| Keysight N9000A CXA | Spectrum Analyzer 9 kHz–7.5 GHz | LAN | pyvisa-py (VXI-11) |
+| HackRF One | SDR transceiver 1 MHz–6 GHz | USB | python-hackrf / SoapySDR |
+| Red Pitaya | FPGA scope / gen / spectrum | LAN | pyvisa-py (SCPI) |
+| Prodigit 3310F | DC Electronic Load 300W | RS-232 | pyserial (SCPI-like) |
+
+### Connection topology
+
+```
+USB  (usbipd → WSL2)                 LAN  (pyvisa-py, VXI-11)
+ ├─ ADP2230       → pydwf             └─ E36231A   → 192.168.1.43
+ ├─ TBS1102C      → python-usbtmc        (N9000A, Red Pitaya when on bench)
+ ├─ FRDM-MCXA153  → CMSIS-DAP + serial
+ └─ Nexys A7      → openFPGALoader + UART
+```
+
+### Cross-instrument proven
+
+- **ADP2230 → TBS1102C**: generate + measure, frequency/amplitude verified
+- **ADP2230 → Nexys A7 → TBS1102C**: triple-instrument frequency counter (0.13% error)
+- **E36231A**: 0–12 V sweep, glitching profiles, < 0.03% voltage accuracy
+
 ## Repository layout
 
 ```
